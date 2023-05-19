@@ -140,16 +140,19 @@ class Scheduler:
         self.pending_tasks = [
             0
         ] * n_workers  # keeps track of the number of tasks sent to each worker without a request from the worker (due to affinity)
+
         for i in range(n_workers):
             sched_conn, worker_conn = Pipe()
             worker_conns += [worker_conn]
             self.conn += [sched_conn]
+
         self.workers = [
             Worker(self.graph, self.operq, worker_conns[i], i) for i in range(n_workers)
         ]
 
         if mpi_enabled:
             self.mpi_handle()
+
         else:
             self.mpi_rank = None
 
@@ -275,10 +278,12 @@ class Scheduler:
                 self.all_idle(self.workers), self.operq.qsize(), len(self.tasks)
             )
         )
+
         if self.mpi_rank == 0:
             self.outqueue.put(None)
             for t in self.threads:
                 t.join()
+
         for worker in workers:
             worker.terminate()
 
